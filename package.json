@@ -12,5 +12,13 @@
     "express": "^4.18.2",
     "express-prometheus-middleware": "^1.2.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/glendery/logchain-devsecops.git"
+  },
+  "bugs": {
+    "url": "https://github.com/glendery/logchain-devsecops/issues"
+  },
+  "homepage": "https://github.com/glendery/logchain-devsecops#readme",
   "description": ""
 }
