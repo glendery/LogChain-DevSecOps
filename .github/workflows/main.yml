@@ -1,0 +1,45 @@
+name: DevSecOps LogChain Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  security-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Run SAST (Semgrep)
+      uses: returntocorp/semgrep-action@v2
+      id: sast
+      with:
+        config: p/javascript
+        
+    - name: Run SCA (Trivy on Dependencies)
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scanners: 'vuln,secret'
+        format: 'table'
+        exit-code: 1
+
+    - name: Build Docker Image
+      run: docker build -t logchain-app:latest .
+
+    - name: Run Container Image Scan (Trivy)
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'logchain-app:latest'
+        format: 'table'
+        exit-code: 1
+
+    - name: Deploy App for DAST
+      run: docker run -d -p 3000:3000 --name logchain-dast logchain-app:latest
+
+    - name: Run DAST (OWASP ZAP - Baseline Scan)
+      run: |
+        sleep 15
+        docker run -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-weekly zap-baseline.py -t http://host.docker.internal:3000/vulnerable?name=test -r zap-report.html || true

@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    image: logchain-app:latest
+    container_name: logchain-app
+    ports:
+      - "3000:3000"
+    command: ["node", "src/server.js"] 
+    networks:
+      - monitor-net
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - app
+    networks:
+      - monitor-net
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - monitor-net
+    depends_on:
+      - prometheus
+
+networks:
+  monitor-net:
